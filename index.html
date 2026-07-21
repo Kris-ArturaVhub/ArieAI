@@ -135,7 +135,7 @@
         .bot-avatar-card[data-emotion="sleepy"] .eye { width: 16px; height: 3px; border-radius: 2px; opacity: 0.6; transform: translateY(4px); }
         .bot-avatar-card[data-emotion="sleepy"] .mouth { width: 8px; height: 8px; border-radius: 50%; opacity: 0.8; }
 
-        /* ANGRY - Đảo góc lông mày hướng xuống trung tâm */
+        /* ANGRY */
         .bot-avatar-card[data-emotion="angry"] { --led-color1: #ff3838; --led-color2: #ff4d4d; }
         .bot-avatar-card[data-emotion="angry"] .eye { 
             height: 12px; 
@@ -150,10 +150,10 @@
             right: -4px;
             height: 10px;
             background: #131622;
-            transform: rotate(25deg); /* Đổi hướng góc xuống */
+            transform: rotate(25deg);
         }
         .bot-avatar-card[data-emotion="angry"] .eye:last-child::before {
-            transform: rotate(-25deg); /* Đổi hướng góc xuống */
+            transform: rotate(-25deg);
         }
         .bot-avatar-card[data-emotion="angry"] .mouth { 
             border-radius: 12px 12px 4px 4px; 
@@ -161,7 +161,7 @@
             width: 16px;
         }
 
-        /* SAD - Nhận lại mắt và kiểu lông mày trước đó của Angry */
+        /* SAD */
         .bot-avatar-card[data-emotion="sad"] { --led-color1: #4a69bd; --led-color2: #1e3799; }
         .bot-avatar-card[data-emotion="sad"] .eye { 
             height: 12px; 
@@ -258,7 +258,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* KHUNG CHỌN CẢM XÚC (POPOVER) */
+        /* KHUNG CHỌN CẢM XÚC */
         .emotions-popover {
             display: flex;
             gap: 6px;
@@ -385,7 +385,7 @@
 <body>
 
     <div class="phone-screen">
-        <!-- KHUNG 1: HEADER & AVATAR -->
+        <!-- HEADER & AVATAR -->
         <div class="header-section">
             <div class="bot-avatar-card" id="botCard" data-emotion="normal" style="--mouth-scale: 1;">
                 <span class="status-badge" id="statusBadge">AI Core Active</span>
@@ -399,9 +399,9 @@
             </div>
         </div>
 
-        <!-- KHUNG 2: CHAT HISTORY -->
+        <!-- CHAT HISTORY -->
         <div class="chat-history" id="chatHistory">
-            <div class="msg-bubble msg-bot">⚡ Đã đảo góc lông mày cho Angry và chuyển phom mắt/lông mày sang cho Sad!</div>
+            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã kết nối Serverless Vercel an toàn!</div>
         </div>
 
         <!-- POPUP BẢNG CẢM XÚC -->
@@ -414,7 +414,7 @@
             <button class="emo-btn" onclick="selectEmotion('surprised', this)">Surprised</button>
         </div>
 
-        <!-- KHUNG 3: INPUT SECTION -->
+        <!-- INPUT SECTION -->
         <div class="input-section">
             <button class="emo-toggle-btn" id="emoToggleBtn" onclick="toggleEmotionsPopover()">😀</button>
             <input type="text" id="userInput" class="chat-input" placeholder="Nhập tin nhắn..." oninput="handleInputChange()" onkeypress="if(event.key==='Enter') sendMessage()">
@@ -423,9 +423,6 @@
     </div>
 
     <script>
-        const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
-        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
         const botCard = document.getElementById('botCard');
         const chatHistory = document.getElementById('chatHistory');
         const userInput = document.getElementById('userInput');
@@ -454,61 +451,72 @@
         }
 
         async function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
+            const text = userInput.value.trim();
+            if (!text) return;
 
-    userInput.value = '';
-    sendBtn.classList.remove('show');
-    emotionsPopover.classList.remove('active');
-    emoToggleBtn.classList.remove('active');
+            userInput.value = '';
+            sendBtn.classList.remove('show');
+            emotionsPopover.classList.remove('active');
+            emoToggleBtn.classList.remove('active');
 
-    // Thêm tin nhắn của User vào giao diện...
-    const userBubble = document.createElement('div');
-    userBubble.className = 'msg-bubble msg-user';
-    userBubble.innerText = text;
-    chatHistory.appendChild(userBubble);
+            // Thêm tin nhắn User
+            const userBubble = document.createElement('div');
+            userBubble.className = 'msg-bubble msg-user';
+            userBubble.innerText = text;
+            chatHistory.appendChild(userBubble);
 
-    const botBubble = document.createElement('div');
-    botBubble.className = 'msg-bubble msg-bot';
-    botBubble.innerText = '...';
-    chatHistory.appendChild(botBubble);
+            const botBubble = document.createElement('div');
+            botBubble.className = 'msg-bubble msg-bot';
+            botBubble.innerText = '...';
+            chatHistory.appendChild(botBubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
 
-    statusBadge.innerText = "Thinking...";
-    statusBadge.style.color = "#fdcb6e";
+            statusBadge.innerText = "Thinking...";
+            statusBadge.style.color = "#fdcb6e";
 
-    try {
-        // GỌI ĐẾN BACKEND TRUNG GIAN (Không chứa API Key)
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text })
-        });
+            try {
+                // Gọi tới Serverless Function trên Vercel
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text })
+                });
 
-        const data = await response.json();
-        statusBadge.innerText = "AI Core Active";
-        statusBadge.style.color = "#00ff88";
+                const data = await response.json();
+                statusBadge.innerText = "AI Core Active";
+                statusBadge.style.color = "#00ff88";
 
-        if (data.text) {
-            let aiText = data.text.trim().replace(/```json/g, '').replace(/```/g, '').trim();
-            const parsedData = JSON.parse(aiText);
+                if (data.text) {
+                    let replyText = data.text;
+                    let emo = 'normal';
 
-            selectEmotion(parsedData.emotion || 'normal');
-            await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
-        } else {
-            throw new Error("Invalid response format");
+                    // Xử lý Parse an toàn không sợ crash
+                    try {
+                        let cleanJson = data.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                        const parsed = JSON.parse(cleanJson);
+                        replyText = parsed.reply_text || parsed.reply || data.text;
+                        emo = parsed.emotion || 'normal';
+                    } catch (e) {
+                        console.log("Response không phải JSON thuần, hiển thị dạng text:", e);
+                    }
+
+                    selectEmotion(emo);
+                    await animateTypewriterAndMouth(botBubble, replyText);
+                } else if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    throw new Error("Invalid response format");
+                }
+
+            } catch (error) {
+                console.error('Frontend Fetch Error:', error);
+                statusBadge.innerText = "Error";
+                statusBadge.style.color = "#ff3838";
+                selectEmotion('sad');
+                botBubble.innerText = "⚠️ " + (error.message || "Lỗi xử lý từ máy chủ!");
+            }
         }
 
-    } catch (error) {
-        console.error(error);
-        statusBadge.innerText = "Error";
-        statusBadge.style.color = "#ff3838";
-        selectEmotion('sad');
-        botBubble.innerText = "⚠️ Lỗi xử lý từ máy chủ!";
-    }
-        }
-        
-
-            
         async function animateTypewriterAndMouth(element, fullText) {
             botCard.classList.add('talking');
             element.innerText = "";
@@ -527,5 +535,5 @@
         }
     </script>
 </body>
-                                                                                               </html>
-</html>
+            </html>
+    

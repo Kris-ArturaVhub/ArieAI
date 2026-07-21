@@ -1,0 +1,2 @@
+# ArieAI
+Mini AI

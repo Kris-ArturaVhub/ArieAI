@@ -14,8 +14,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API Key chưa được cấu hình trên Vercel!' });
     }
 
-    // Sử dụng model gemini-1.5-flash chuẩn
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Dùng alias gemini-flash chuẩn không bao giờ sợ lỗi đổi model
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash:generateContent?key=${apiKey}`;
     
     const apiResponse = await fetch(geminiUrl, {
       method: 'POST',
@@ -35,7 +35,6 @@ export default async function handler(req, res) {
 
     const data = await apiResponse.json();
 
-    // Nếu Google báo lỗi (ví dụ API Key hỏng/bị rò rỉ)
     if (data.error) {
       console.error('Google API Error:', data.error);
       return res.status(500).json({ error: data.error.message || 'Lỗi từ phía Gemini API' });
@@ -44,7 +43,7 @@ export default async function handler(req, res) {
     if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
       let rawText = data.candidates[0].content.parts[0].text;
       
-      // Xóa bỏ các ký tự codeblock ```json nếu Gemini lỡ tự thêm vào
+      // Xóa bỏ các ký tự codeblock ```json nếu Gemini tự thêm vào
       rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
       return res.status(200).json({ text: rawText });
@@ -57,4 +56,4 @@ export default async function handler(req, res) {
     console.error('Error in API route:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
-  }
+                                  }

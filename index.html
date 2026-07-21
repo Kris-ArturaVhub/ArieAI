@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Arie - mini chatbot</title>
+    <title>Arie AI Engine - Core System</title>
     <style>
         * {
             box-sizing: border-box;
@@ -49,7 +49,7 @@
 
         /* HEADER & AVATAR */
         .header-section {
-            padding: 8px 12px;
+            padding: 10px 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -162,35 +162,6 @@
             border: 1px solid rgba(0, 255, 136, 0.2);
         }
 
-        /* THANH CHỌN CẢM XÚC (EMOTIONS BAR) */
-        .emotions-bar {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            overflow-x: auto;
-            width: 100%;
-            padding-bottom: 2px;
-        }
-        .emotions-bar::-webkit-scrollbar { display: none; }
-
-        .emo-btn {
-            background: #161924;
-            border: 1px solid #262a3a;
-            color: #a0aec0;
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        .emo-btn:hover, .emo-btn.active {
-            background: #00f2fe;
-            color: #000;
-            border-color: #00f2fe;
-            font-weight: 600;
-        }
-
         /* LỊCH SỬ CHAT */
         .chat-history {
             flex: 1 1 0%;
@@ -235,7 +206,50 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* KHUNG INPUT & CƠ CHẾ TRƯỢT NÚT GỬI THÔNG MINH */
+        /* KHUNG CHỌN CẢM XÚC (POPOVER) */
+        .emotions-popover {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #131622;
+            border-top: 1px solid #1c1f2b;
+            overflow-x: auto;
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        .emotions-popover.active {
+            max-height: 50px;
+            opacity: 1;
+            padding: 8px 12px;
+        }
+
+        .emotions-popover::-webkit-scrollbar { display: none; }
+
+        .emo-btn {
+            background: #1c2030;
+            border: 1px solid #2a2f45;
+            color: #a0aec0;
+            font-size: 11.5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .emo-btn:hover, .emo-btn.selected {
+            background: #00f2fe;
+            color: #000;
+            border-color: #00f2fe;
+            font-weight: 600;
+        }
+
+        /* KHUNG INPUT (KHUNG 3) */
         .input-section {
             padding: 10px 12px;
             background: #0a0b0f;
@@ -244,6 +258,29 @@
             gap: 8px;
             align-items: center;
             flex-shrink: 0;
+            position: relative;
+        }
+
+        /* Nút mặt cười 😀 bên trái */
+        .emo-toggle-btn {
+            background: #161924;
+            border: 1px solid #262a3a;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .emo-toggle-btn:active, .emo-toggle-btn.active {
+            transform: scale(0.92);
+            border-color: #00f2fe;
+            background: #1c2235;
         }
 
         .chat-input {
@@ -262,7 +299,7 @@
             border-color: #00f2fe;
         }
 
-        /* Nút gửi có hiệu ứng ẩn/hiện & trượt mượt mà */
+        /* Nút gửi trượt bên phải */
         .send-btn {
             background: linear-gradient(135deg, #00f2fe, #4facfe);
             border: none;
@@ -277,7 +314,6 @@
             align-items: center;
             flex-shrink: 0;
             
-            /* Trạng thái ẩn mặc định khi input trống */
             opacity: 0;
             transform: scale(0.5) translateX(20px);
             width: 0px;
@@ -288,7 +324,6 @@
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Khi có class .show, nút trượt ra và chiếm chỗ */
         .send-btn.show {
             opacity: 1;
             transform: scale(1) translateX(0);
@@ -301,6 +336,7 @@
 <body>
 
     <div class="phone-screen">
+        <!-- KHUNG 1: HEADER & AVATAR -->
         <div class="header-section">
             <div class="bot-avatar-card" id="botCard" data-emotion="normal" style="--mouth-scale: 1;">
                 <span class="status-badge" id="statusBadge">AI Core Active</span>
@@ -312,23 +348,26 @@
                     <div class="mouth" id="mouth"></div>
                 </div>
             </div>
-
-            <!-- NÚT CHỌN CẢM XÚC NHANH (EMOTIONS BAR) -->
-            <div class="emotions-bar">
-                <button class="emo-btn active" onclick="changeEmotion('normal', this)">Normal</button>
-                <button class="emo-btn" onclick="changeEmotion('happy', this)">Happy</button>
-                <button class="emo-btn" onclick="changeEmotion('sleepy', this)">Sleepy</button>
-                <button class="emo-btn" onclick="changeEmotion('angry', this)">Angry</button>
-                <button class="emo-btn" onclick="changeEmotion('sad', this)">Sad</button>
-                <button class="emo-btn" onclick="changeEmotion('surprised', this)">Surprised</button>
-            </div>
         </div>
 
+        <!-- KHUNG 2: CHAT HISTORY -->
         <div class="chat-history" id="chatHistory">
-            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã sẵn sàng! Bạn có thể gõ tin nhắn hoặc test nút cảm xúc ở trên nhé.</div>
+            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã sẵn sàng! Nhấn nút 😀 ở góc trái để đổi cảm xúc thủ công nhé.</div>
         </div>
 
+        <!-- POPUP BẢNG CẢM XÚC (TRƯỢT LÊN KHI BẤM 😀) -->
+        <div class="emotions-popover" id="emotionsPopover">
+            <button class="emo-btn selected" onclick="selectEmotion('normal', this)">Normal</button>
+            <button class="emo-btn" onclick="selectEmotion('happy', this)">Happy</button>
+            <button class="emo-btn" onclick="selectEmotion('sleepy', this)">Sleepy</button>
+            <button class="emo-btn" onclick="selectEmotion('angry', this)">Angry</button>
+            <button class="emo-btn" onclick="selectEmotion('sad', this)">Sad</button>
+            <button class="emo-btn" onclick="selectEmotion('surprised', this)">Surprised</button>
+        </div>
+
+        <!-- KHUNG 3: INPUT SECTION -->
         <div class="input-section">
+            <button class="emo-toggle-btn" id="emoToggleBtn" onclick="toggleEmotionsPopover()">😀</button>
             <input type="text" id="userInput" class="chat-input" placeholder="Nhập tin nhắn..." oninput="handleInputChange()" onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" id="sendBtn" onclick="sendMessage()">➔</button>
         </div>
@@ -343,18 +382,25 @@
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
         const statusBadge = document.getElementById('statusBadge');
+        const emotionsPopover = document.getElementById('emotionsPopover');
+        const emoToggleBtn = document.getElementById('emoToggleBtn');
 
-        // Hàm đổi cảm xúc thủ công bằng thanh công cụ
-        function changeEmotion(emo, btnElement) {
-            botCard.setAttribute('data-emotion', emo);
-            document.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
-            if(btnElement) btnElement.classList.add('active');
+        // Bật / Tắt bảng chọn cảm xúc khi bấm nút 😀
+        function toggleEmotionsPopover() {
+            emotionsPopover.classList.toggle('active');
+            emoToggleBtn.classList.toggle('active');
         }
 
-        // Kiểm soát ẩn/hiện nút gửi dựa vào ký tự trong ô input
+        // Đổi cảm xúc khi bấm nút trong bảng
+        function selectEmotion(emo, btnElement) {
+            botCard.setAttribute('data-emotion', emo);
+            document.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('selected'));
+            if(btnElement) btnElement.classList.add('selected');
+        }
+
+        // Kiểm soát ẩn/hiện nút gửi dựa theo độ dài chữ trong ô input
         function handleInputChange() {
-            const val = userInput.value;
-            if (val.trim().length > 0) {
+            if (userInput.value.trim().length > 0) {
                 sendBtn.classList.add('show');
             } else {
                 sendBtn.classList.remove('show');
@@ -365,9 +411,12 @@
             const text = userInput.value.trim();
             if (!text) return;
 
-            // Xóa nội dung input và ẩn nút gửi ngay lập tức
             userInput.value = '';
             sendBtn.classList.remove('show');
+
+            // Ẩn bảng emotions nếu đang mở
+            emotionsPopover.classList.remove('active');
+            emoToggleBtn.classList.remove('active');
 
             const userBubble = document.createElement('div');
             userBubble.className = 'msg-bubble msg-user';
@@ -410,7 +459,7 @@
                     aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
                     const parsedData = JSON.parse(aiText);
 
-                    botCard.setAttribute('data-emotion', parsedData.emotion || 'normal');
+                    selectEmotion(parsedData.emotion || 'normal');
                     await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
                 } else {
                     throw new Error("Invalid Response");
@@ -420,7 +469,7 @@
                 console.error(error);
                 statusBadge.innerText = "Error";
                 statusBadge.style.color = "#ff3838";
-                botCard.setAttribute('data-emotion', 'sad');
+                selectEmotion('sad');
                 botBubble.innerText = "⚠️ Lỗi kết nối API! Vui lòng kiểm tra lại Key.";
             }
         }

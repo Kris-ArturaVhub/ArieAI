@@ -124,7 +124,7 @@
             box-shadow: 0 0 6px var(--led-color1);
         }
 
-        /* EMOTIONS MAPPING - CHUẨN XÁC BIỂU CẢM */
+        /* EMOTIONS MAP */
         .bot-avatar-card[data-emotion="normal"] { --led-color1: #00f2fe; --led-color2: #4facfe; }
         
         .bot-avatar-card[data-emotion="happy"] { --led-color1: #00ff88; --led-color2: #00b894; }
@@ -135,6 +135,7 @@
         .bot-avatar-card[data-emotion="sleepy"] .eye { width: 16px; height: 3px; border-radius: 2px; opacity: 0.6; transform: translateY(4px); }
         .bot-avatar-card[data-emotion="sleepy"] .mouth { width: 8px; height: 8px; border-radius: 50%; opacity: 0.8; }
 
+        /* ANGRY - Đảo góc lông mày hướng xuống trung tâm */
         .bot-avatar-card[data-emotion="angry"] { --led-color1: #ff3838; --led-color2: #ff4d4d; }
         .bot-avatar-card[data-emotion="angry"] .eye { 
             height: 12px; 
@@ -149,10 +150,10 @@
             right: -4px;
             height: 10px;
             background: #131622;
-            transform: rotate(-25deg);
+            transform: rotate(25deg); /* Đổi hướng góc xuống */
         }
         .bot-avatar-card[data-emotion="angry"] .eye:last-child::before {
-            transform: rotate(25deg);
+            transform: rotate(-25deg); /* Đổi hướng góc xuống */
         }
         .bot-avatar-card[data-emotion="angry"] .mouth { 
             border-radius: 12px 12px 4px 4px; 
@@ -160,24 +161,25 @@
             width: 16px;
         }
 
+        /* SAD - Nhận lại mắt và kiểu lông mày trước đó của Angry */
         .bot-avatar-card[data-emotion="sad"] { --led-color1: #4a69bd; --led-color2: #1e3799; }
         .bot-avatar-card[data-emotion="sad"] .eye { 
             height: 12px; 
-            border-radius: 4px 4px 50% 50%; 
+            border-radius: 50% 50% 4px 4px; 
             transform: translateY(2px);
         }
         .bot-avatar-card[data-emotion="sad"] .eye::before {
             content: '';
             position: absolute;
-            bottom: -6px;
+            top: -6px;
             left: -4px;
             right: -4px;
             height: 10px;
             background: #131622;
-            transform: rotate(20deg);
+            transform: rotate(-25deg);
         }
         .bot-avatar-card[data-emotion="sad"] .eye:last-child::before {
-            transform: rotate(-20deg);
+            transform: rotate(25deg);
         }
         .bot-avatar-card[data-emotion="sad"] .mouth { 
             border-radius: 18px 18px 0 0; 
@@ -299,7 +301,7 @@
             font-weight: 600;
         }
 
-        /* KHUNG INPUT (KHUNG 3) */
+        /* KHUNG INPUT */
         .input-section {
             padding: 10px 12px;
             background: #0a0b0f;
@@ -361,7 +363,6 @@
             justify-content: center;
             align-items: center;
             flex-shrink: 0;
-            
             opacity: 0;
             transform: scale(0.5) translateX(20px);
             width: 0px;
@@ -400,7 +401,7 @@
 
         <!-- KHUNG 2: CHAT HISTORY -->
         <div class="chat-history" id="chatHistory">
-            <div class="msg-bubble msg-bot">⚡ Đã cập nhật chuẩn biểu cảm Angry, Sad và Sleepy! Bấm nút 😀 để trải nghiệm ngay.</div>
+            <div class="msg-bubble msg-bot">⚡ Đã đảo góc lông mày cho Angry và chuyển phom mắt/lông mày sang cho Sad!</div>
         </div>
 
         <!-- POPUP BẢNG CẢM XÚC -->
@@ -503,7 +504,7 @@
                     const parsedData = JSON.parse(aiText);
 
                     selectEmotion(parsedData.emotion || 'normal');
-                    await animateTypewriterAndMouth(botBadge, parsedData.reply_text);
+                    await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
                 } else {
                     throw new Error("Invalid Response");
                 }
@@ -535,5 +536,5 @@
         }
     </script>
 </body>
-    </html>
-                                                                                            
+                                                                                               </html>
+</html>

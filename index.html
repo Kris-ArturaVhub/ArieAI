@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Arie AI Engine - Core System</title>
+    <title>Arie - mini chatbot</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,7 +15,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Cấm toàn bộ trang web bị cuộn trượt */
+            overflow: hidden;
             background-color: #08090c;
             color: #ffffff;
             display: flex;
@@ -23,13 +23,12 @@
             align-items: center;
         }
 
-        /* KHUNG ĐIỆN THOẠI - DÙNG 100dvh ĐỂ CHỐNG BỊ LÚN BỞI THANH TRÌNH DUYỆT MOBILE */
         .phone-screen {
             width: 100%;
             max-width: 410px;
             height: 100vh;
-            height: 100dvh; /* Tự động co giãn vừa khít màn hình hiển thị */
-            max-height: 720px;
+            height: 100dvh;
+            max-height: 740px;
             background: #11131a;
             border-radius: 20px;
             border: 2px solid #222634;
@@ -48,23 +47,23 @@
             }
         }
 
-        /* HEADER AVATAR - CỐ ĐỊNH TRÊN CÙNG */
+        /* HEADER & AVATAR */
         .header-section {
-            padding: 10px 14px;
+            padding: 8px 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             background: #0a0b0f;
             border-bottom: 1px solid #1c1f2b;
             position: relative;
-            flex-shrink: 0; /* Cấm header bị co bóp */
+            flex-shrink: 0;
         }
 
         .bot-avatar-card {
             position: relative;
             width: 100%;
-            height: 90px; /* Thu gọn chiều cao tối đa */
-            border-radius: 16px;
+            height: 85px;
+            border-radius: 14px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -88,45 +87,45 @@
             position: absolute;
             inset: 3px;
             background: #131622;
-            border-radius: 13px;
+            border-radius: 11px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             z-index: 1;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
         }
 
         .eyes-container {
             display: flex;
-            gap: 26px;
+            gap: 24px;
             align-items: center;
-            height: 20px;
+            height: 18px;
         }
 
         .eye {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             background-color: #ffffff;
             border-radius: 50%;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .mouth {
-            width: 20px;
-            height: 8px;
+            width: 18px;
+            height: 7px;
             background-color: var(--led-color1);
-            border-radius: 0 0 20px 20px;
+            border-radius: 0 0 18px 18px;
             transition: transform 0.08s ease, background-color 0.3s ease, height 0.2s ease;
             box-shadow: 0 0 6px var(--led-color1);
         }
 
-        /* EMOTIONS */
+        /* EMOTIONS MAP */
         .bot-avatar-card[data-emotion="normal"] { --led-color1: #00f2fe; --led-color2: #4facfe; }
         .bot-avatar-card[data-emotion="happy"] { --led-color1: #00ff88; --led-color2: #00b894; }
-        .bot-avatar-card[data-emotion="happy"] .eye { height: 9px; border-radius: 9px 9px 0 0; }
+        .bot-avatar-card[data-emotion="happy"] .eye { height: 8px; border-radius: 8px 8px 0 0; }
 
         .bot-avatar-card[data-emotion="sleepy"] { --led-color1: #a29bfe; --led-color2: #6c5ce7; }
         .bot-avatar-card[data-emotion="sleepy"] .eye { height: 4px; border-radius: 2px; opacity: 0.7; }
@@ -135,11 +134,11 @@
         .bot-avatar-card[data-emotion="angry"] .eye { height: 6px; transform: rotate(18deg); }
 
         .bot-avatar-card[data-emotion="sad"] { --led-color1: #4a69bd; --led-color2: #1e3799; }
-        .bot-avatar-card[data-emotion="sad"] .eye { height: 7px; border-radius: 0 0 7px 7px; }
+        .bot-avatar-card[data-emotion="sad"] .eye { height: 6px; border-radius: 0 0 6px 6px; }
 
         .bot-avatar-card[data-emotion="surprised"] { --led-color1: #fdcb6e; --led-color2: #e17055; }
-        .bot-avatar-card[data-emotion="surprised"] .eye { width: 20px; height: 20px; }
-        .bot-avatar-card[data-emotion="surprised"] .mouth { border-radius: 50%; height: 14px; width: 14px; }
+        .bot-avatar-card[data-emotion="surprised"] .eye { width: 18px; height: 18px; }
+        .bot-avatar-card[data-emotion="surprised"] .mouth { border-radius: 50%; height: 12px; width: 12px; }
 
         .bot-avatar-card.talking .mouth {
             transform: scaleY(var(--mouth-scale, 1));
@@ -150,40 +149,77 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* LỊCH SỬ CHAT - TỰ CO GIÃN THEO KÍCH THƯỚC CÒN LẠI */
+        .status-badge {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            font-size: 8.5px;
+            color: #00ff88;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 8px;
+            z-index: 2;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        /* THANH CHỌN CẢM XÚC (EMOTIONS BAR) */
+        .emotions-bar {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 2px;
+        }
+        .emotions-bar::-webkit-scrollbar { display: none; }
+
+        .emo-btn {
+            background: #161924;
+            border: 1px solid #262a3a;
+            color: #a0aec0;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .emo-btn:hover, .emo-btn.active {
+            background: #00f2fe;
+            color: #000;
+            border-color: #00f2fe;
+            font-weight: 600;
+        }
+
+        /* LỊCH SỬ CHAT */
         .chat-history {
-            flex: 1 1 0%; /* Ép flex co giãn chính xác trong khoảng trống còn lại */
-            padding: 14px;
+            flex: 1 1 0%;
+            padding: 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            min-height: 0; /* Bắt buộc để flexbox overflow làm việc đúng */
+            gap: 10px;
+            min-height: 0;
         }
 
-        .chat-history::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-history::-webkit-scrollbar-thumb {
-            background: #222634;
-            border-radius: 4px;
-        }
+        .chat-history::-webkit-scrollbar { width: 4px; }
+        .chat-history::-webkit-scrollbar-thumb { background: #222634; border-radius: 4px; }
 
         .msg-bubble {
             max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 13.5px;
-            line-height: 1.45;
+            padding: 9px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.4;
             word-wrap: break-word;
-            animation: fadeIn 0.25s cubic-bezier(0, 0, 0.2, 1);
+            animation: fadeIn 0.2s ease;
         }
 
         .msg-user {
             align-self: flex-end;
             background: linear-gradient(135deg, #0052d4, #4364f7);
             color: #ffffff;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 3px;
         }
 
         .msg-bot {
@@ -191,45 +227,47 @@
             background: #1a1e2b;
             color: #e2e7f2;
             border: 1px solid #262b3c;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 3px;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* KHUNG INPUT - NEO CHẮC CHẮN ĐÁY MÀN HÌNH */
+        /* KHUNG INPUT & CƠ CHẾ TRƯỢT NÚT GỬI THÔNG MINH */
         .input-section {
-            padding: 10px 14px;
+            padding: 10px 12px;
             background: #0a0b0f;
             border-top: 1px solid #1c1f2b;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
-            flex-shrink: 0; /* Tuyệt đối không cho bị bóp nghẹt */
+            flex-shrink: 0;
         }
 
         .chat-input {
             flex: 1;
             background: #161924;
             border: 1px solid #262a3a;
-            border-radius: 22px;
-            padding: 10px 16px;
+            border-radius: 20px;
+            padding: 10px 14px;
             color: #ffffff;
-            font-size: 13.5px;
+            font-size: 13px;
             outline: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .chat-input:focus {
             border-color: #00f2fe;
         }
 
+        /* Nút gửi có hiệu ứng ẩn/hiện & trượt mượt mà */
         .send-btn {
             background: linear-gradient(135deg, #00f2fe, #4facfe);
             border: none;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             color: #000;
             font-weight: bold;
@@ -238,19 +276,25 @@
             justify-content: center;
             align-items: center;
             flex-shrink: 0;
+            
+            /* Trạng thái ẩn mặc định khi input trống */
+            opacity: 0;
+            transform: scale(0.5) translateX(20px);
+            width: 0px;
+            padding: 0;
+            margin-left: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .status-badge {
-            position: absolute;
-            top: 6px;
-            right: 12px;
-            font-size: 9px;
-            color: #00ff88;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 2px 7px;
-            border-radius: 10px;
-            z-index: 2;
-            border: 1px solid rgba(0, 255, 136, 0.2);
+        /* Khi có class .show, nút trượt ra và chiếm chỗ */
+        .send-btn.show {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+            width: 36px;
+            margin-left: 2px;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -268,40 +312,67 @@
                     <div class="mouth" id="mouth"></div>
                 </div>
             </div>
+
+            <!-- NÚT CHỌN CẢM XÚC NHANH (EMOTIONS BAR) -->
+            <div class="emotions-bar">
+                <button class="emo-btn active" onclick="changeEmotion('normal', this)">Normal</button>
+                <button class="emo-btn" onclick="changeEmotion('happy', this)">Happy</button>
+                <button class="emo-btn" onclick="changeEmotion('sleepy', this)">Sleepy</button>
+                <button class="emo-btn" onclick="changeEmotion('angry', this)">Angry</button>
+                <button class="emo-btn" onclick="changeEmotion('sad', this)">Sad</button>
+                <button class="emo-btn" onclick="changeEmotion('surprised', this)">Surprised</button>
+            </div>
         </div>
 
         <div class="chat-history" id="chatHistory">
-            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã sẵn sàng! Chào bạn, tớ có thể giúp gì nào?</div>
+            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã sẵn sàng! Bạn có thể gõ tin nhắn hoặc test nút cảm xúc ở trên nhé.</div>
         </div>
 
         <div class="input-section">
-            <input type="text" id="userInput" class="chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button class="send-btn" onclick="sendMessage()">➔</button>
+            <input type="text" id="userInput" class="chat-input" placeholder="Nhập tin nhắn..." oninput="handleInputChange()" onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➔</button>
         </div>
     </div>
 
     <script>
-        const GEMINI_API_KEY = "Arie";
-        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const botCard = document.getElementById('botCard');
         const chatHistory = document.getElementById('chatHistory');
         const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
         const statusBadge = document.getElementById('statusBadge');
 
-        function setEmotion(emo) {
-            botCard.setAttribute('data-emotion', emo || 'normal');
+        // Hàm đổi cảm xúc thủ công bằng thanh công cụ
+        function changeEmotion(emo, btnElement) {
+            botCard.setAttribute('data-emotion', emo);
+            document.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+        }
+
+        // Kiểm soát ẩn/hiện nút gửi dựa vào ký tự trong ô input
+        function handleInputChange() {
+            const val = userInput.value;
+            if (val.trim().length > 0) {
+                sendBtn.classList.add('show');
+            } else {
+                sendBtn.classList.remove('show');
+            }
         }
 
         async function sendMessage() {
             const text = userInput.value.trim();
             if (!text) return;
 
+            // Xóa nội dung input và ẩn nút gửi ngay lập tức
+            userInput.value = '';
+            sendBtn.classList.remove('show');
+
             const userBubble = document.createElement('div');
             userBubble.className = 'msg-bubble msg-user';
             userBubble.innerText = text;
             chatHistory.appendChild(userBubble);
-            userInput.value = '';
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             const botBubble = document.createElement('div');
@@ -339,7 +410,7 @@
                     aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
                     const parsedData = JSON.parse(aiText);
 
-                    setEmotion(parsedData.emotion);
+                    botCard.setAttribute('data-emotion', parsedData.emotion || 'normal');
                     await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
                 } else {
                     throw new Error("Invalid Response");
@@ -349,7 +420,7 @@
                 console.error(error);
                 statusBadge.innerText = "Error";
                 statusBadge.style.color = "#ff3838";
-                setEmotion("sad");
+                botCard.setAttribute('data-emotion', 'sad');
                 botBubble.innerText = "⚠️ Lỗi kết nối API! Vui lòng kiểm tra lại Key.";
             }
         }
@@ -364,7 +435,7 @@
                 botCard.style.setProperty('--mouth-scale', mouthScale);
 
                 chatHistory.scrollTop = chatHistory.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 35));
+                await new Promise(resolve => setTimeout(resolve, 30));
             }
 
             botCard.classList.remove('talking');
@@ -372,4 +443,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    

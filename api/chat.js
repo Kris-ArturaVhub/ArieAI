@@ -11,11 +11,11 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'API Key chưa được cấu hình trên Vercel!' });
+      return res.status(500).json({ error: 'API Key chưa được cài đặt trên Vercel!' });
     }
 
-    // Dùng alias gemini-flash chuẩn không bao giờ sợ lỗi đổi model
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash:generateContent?key=${apiKey}`;
+    // Endpoint REST API của Gemini 1.5 Flash
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const apiResponse = await fetch(geminiUrl, {
       method: 'POST',
@@ -23,11 +23,13 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Bạn là Arie chatbot mini. Hãy trả lời câu hỏi sau bằng Tiếng Việt.
-            BẮT BUỘC trả về định dạng JSON thuần không có Markdown codeblock, dạng:
-            {"reply_text": "câu trả lời của bạn", "emotion": "normal"}
+            text: `Bạn là Arie, chatbot mini. Hãy trả lời câu hỏi sau bằng Tiếng Việt.
+            BẮT BUỘC trả về định dạng JSON thuần đúng cấu trúc sau, không kèm bất kỳ văn bản giải thích nào khác:
+            {"reply_text": "nội dung câu trả lời", "emotion": "normal"}
+
+            Các emotion hợp lệ gồm: normal, happy, sleepy, angry, sad, surprised.
             
-            Câu hỏi: "${prompt}"`
+            Câu hỏi của người dùng: "${prompt}"`
           }]
         }]
       })
@@ -43,17 +45,16 @@ export default async function handler(req, res) {
     if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
       let rawText = data.candidates[0].content.parts[0].text;
       
-      // Xóa bỏ các ký tự codeblock ```json nếu Gemini tự thêm vào
-      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      // Xóa sạch các dấu ```json hoặc ``` ở đầu/cuối chuỗi
+      rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
       return res.status(200).json({ text: rawText });
     } else {
-      console.error('Unexpected Gemini Response Structure:', JSON.stringify(data));
-      return res.status(500).json({ error: 'Phản hồi từ Gemini không đúng cấu trúc' });
+      return res.status(500).json({ error: 'Không nhận được phản hồi đúng từ Gemini' });
     }
 
   } catch (error) {
     console.error('Error in API route:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
-                                  }
+  }

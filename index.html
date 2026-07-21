@@ -451,72 +451,73 @@
         }
 
         async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
+    const text = userInput.value.trim();
+    if (!text) return;
 
-            userInput.value = '';
-            sendBtn.classList.remove('show');
-            emotionsPopover.classList.remove('active');
-            emoToggleBtn.classList.remove('active');
+    userInput.value = '';
+    sendBtn.classList.remove('show');
+    emotionsPopover.classList.remove('active');
+    emoToggleBtn.classList.remove('active');
 
-            // Thêm tin nhắn User
-            const userBubble = document.createElement('div');
-            userBubble.className = 'msg-bubble msg-user';
-            userBubble.innerText = text;
-            chatHistory.appendChild(userBubble);
+    // Thêm tin nhắn của User
+    const userBubble = document.createElement('div');
+    userBubble.className = 'msg-bubble msg-user';
+    userBubble.innerText = text;
+    chatHistory.appendChild(userBubble);
 
-            const botBubble = document.createElement('div');
-            botBubble.className = 'msg-bubble msg-bot';
-            botBubble.innerText = '...';
-            chatHistory.appendChild(botBubble);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+    const botBubble = document.createElement('div');
+    botBubble.className = 'msg-bubble msg-bot';
+    botBubble.innerText = '...';
+    chatHistory.appendChild(botBubble);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            statusBadge.innerText = "Thinking...";
-            statusBadge.style.color = "#fdcb6e";
+    statusBadge.innerText = "Thinking...";
+    statusBadge.style.color = "#fdcb6e";
 
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: text })
+        });
+
+        const data = await response.json();
+        statusBadge.innerText = "AI Core Active";
+        statusBadge.style.color = "#00ff88";
+
+        if (data.text) {
+            let replyText = data.text;
+            let emo = 'normal';
+
+            // Trích xuất đối tượng JSON từ chuỗi bằng Regex để tránh lỗi Unexpected Token
             try {
-                // Gọi tới Serverless Function trên Vercel
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: text })
-                });
-
-                const data = await response.json();
-                statusBadge.innerText = "AI Core Active";
-                statusBadge.style.color = "#00ff88";
-
-                if (data.text) {
-                    let replyText = data.text;
-                    let emo = 'normal';
-
-                    // Xử lý Parse an toàn không sợ crash
-                    try {
-                        let cleanJson = data.text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                        const parsed = JSON.parse(cleanJson);
-                        replyText = parsed.reply_text || parsed.reply || data.text;
-                        emo = parsed.emotion || 'normal';
-                    } catch (e) {
-                        console.log("Response không phải JSON thuần, hiển thị dạng text:", e);
-                    }
-
-                    selectEmotion(emo);
-                    await animateTypewriterAndMouth(botBubble, replyText);
-                } else if (data.error) {
-                    throw new Error(data.error);
-                } else {
-                    throw new Error("Invalid response format");
+                const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    replyText = parsed.reply_text || parsed.reply || replyText;
+                    emo = parsed.emotion || 'normal';
                 }
-
-            } catch (error) {
-                console.error('Frontend Fetch Error:', error);
-                statusBadge.innerText = "Error";
-                statusBadge.style.color = "#ff3838";
-                selectEmotion('sad');
-                botBubble.innerText = "⚠️ " + (error.message || "Lỗi xử lý từ máy chủ!");
+            } catch (e) {
+                console.warn("Không parse được JSON, hiển thị text thuần:", e);
             }
+
+            selectEmotion(emo);
+            await animateTypewriterAndMouth(botBubble, replyText);
+        } else if (data.error) {
+            throw new Error(data.error);
+        } else {
+            throw new Error("Phản hồi không hợp lệ");
         }
 
+    } catch (error) {
+        console.error('Frontend Fetch Error:', error);
+        statusBadge.innerText = "Error";
+        statusBadge.style.color = "#ff3838";
+        selectEmotion('sad');
+        botBubble.innerText = "⚠️ " + (error.message || "Lỗi xử lý từ máy chủ!");
+    }
+        }
+            
         async function animateTypewriterAndMouth(element, fullText) {
             botCard.classList.add('talking');
             element.innerText = "";

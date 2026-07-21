@@ -102,6 +102,7 @@
             gap: 24px;
             align-items: center;
             height: 18px;
+            position: relative;
         }
 
         .eye {
@@ -111,6 +112,7 @@
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
 
         .mouth {
@@ -118,27 +120,75 @@
             height: 7px;
             background-color: var(--led-color1);
             border-radius: 0 0 18px 18px;
-            transition: transform 0.08s ease, background-color 0.3s ease, height 0.2s ease;
+            transition: transform 0.08s ease, background-color 0.3s ease, height 0.2s ease, border-radius 0.3s ease;
             box-shadow: 0 0 6px var(--led-color1);
         }
 
-        /* EMOTIONS MAP */
+        /* EMOTIONS MAPPING - CHUẨN XÁC BIỂU CẢM */
         .bot-avatar-card[data-emotion="normal"] { --led-color1: #00f2fe; --led-color2: #4facfe; }
+        
         .bot-avatar-card[data-emotion="happy"] { --led-color1: #00ff88; --led-color2: #00b894; }
         .bot-avatar-card[data-emotion="happy"] .eye { height: 8px; border-radius: 8px 8px 0 0; }
+        .bot-avatar-card[data-emotion="happy"] .mouth { border-radius: 0 0 18px 18px; height: 9px; width: 22px; }
 
         .bot-avatar-card[data-emotion="sleepy"] { --led-color1: #a29bfe; --led-color2: #6c5ce7; }
-        .bot-avatar-card[data-emotion="sleepy"] .eye { height: 4px; border-radius: 2px; opacity: 0.7; }
+        .bot-avatar-card[data-emotion="sleepy"] .eye { width: 16px; height: 3px; border-radius: 2px; opacity: 0.6; transform: translateY(4px); }
+        .bot-avatar-card[data-emotion="sleepy"] .mouth { width: 8px; height: 8px; border-radius: 50%; opacity: 0.8; }
 
         .bot-avatar-card[data-emotion="angry"] { --led-color1: #ff3838; --led-color2: #ff4d4d; }
-        .bot-avatar-card[data-emotion="angry"] .eye { height: 6px; transform: rotate(18deg); }
+        .bot-avatar-card[data-emotion="angry"] .eye { 
+            height: 12px; 
+            border-radius: 50% 50% 4px 4px; 
+            transform: translateY(-2px);
+        }
+        .bot-avatar-card[data-emotion="angry"] .eye::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -4px;
+            right: -4px;
+            height: 10px;
+            background: #131622;
+            transform: rotate(-25deg);
+        }
+        .bot-avatar-card[data-emotion="angry"] .eye:last-child::before {
+            transform: rotate(25deg);
+        }
+        .bot-avatar-card[data-emotion="angry"] .mouth { 
+            border-radius: 12px 12px 4px 4px; 
+            height: 6px; 
+            width: 16px;
+        }
 
         .bot-avatar-card[data-emotion="sad"] { --led-color1: #4a69bd; --led-color2: #1e3799; }
-        .bot-avatar-card[data-emotion="sad"] .eye { height: 6px; border-radius: 0 0 6px 6px; }
+        .bot-avatar-card[data-emotion="sad"] .eye { 
+            height: 12px; 
+            border-radius: 4px 4px 50% 50%; 
+            transform: translateY(2px);
+        }
+        .bot-avatar-card[data-emotion="sad"] .eye::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: -4px;
+            right: -4px;
+            height: 10px;
+            background: #131622;
+            transform: rotate(20deg);
+        }
+        .bot-avatar-card[data-emotion="sad"] .eye:last-child::before {
+            transform: rotate(-20deg);
+        }
+        .bot-avatar-card[data-emotion="sad"] .mouth { 
+            border-radius: 18px 18px 0 0; 
+            height: 6px; 
+            width: 16px;
+            transform: translateY(2px);
+        }
 
         .bot-avatar-card[data-emotion="surprised"] { --led-color1: #fdcb6e; --led-color2: #e17055; }
         .bot-avatar-card[data-emotion="surprised"] .eye { width: 18px; height: 18px; }
-        .bot-avatar-card[data-emotion="surprised"] .mouth { border-radius: 50%; height: 12px; width: 12px; }
+        .bot-avatar-card[data-emotion="surprised"] .mouth { border-radius: 50%; height: 14px; width: 12px; }
 
         .bot-avatar-card.talking .mouth {
             transform: scaleY(var(--mouth-scale, 1));
@@ -261,7 +311,6 @@
             position: relative;
         }
 
-        /* Nút mặt cười 😀 bên trái */
         .emo-toggle-btn {
             background: #161924;
             border: 1px solid #262a3a;
@@ -299,7 +348,6 @@
             border-color: #00f2fe;
         }
 
-        /* Nút gửi trượt bên phải */
         .send-btn {
             background: linear-gradient(135deg, #00f2fe, #4facfe);
             border: none;
@@ -352,10 +400,10 @@
 
         <!-- KHUNG 2: CHAT HISTORY -->
         <div class="chat-history" id="chatHistory">
-            <div class="msg-bubble msg-bot">⚡ Hệ thống Arie AI Core đã sẵn sàng! Nhấn nút 😀 ở góc trái để đổi cảm xúc thủ công nhé.</div>
+            <div class="msg-bubble msg-bot">⚡ Đã cập nhật chuẩn biểu cảm Angry, Sad và Sleepy! Bấm nút 😀 để trải nghiệm ngay.</div>
         </div>
 
-        <!-- POPUP BẢNG CẢM XÚC (TRƯỢT LÊN KHI BẤM 😀) -->
+        <!-- POPUP BẢNG CẢM XÚC -->
         <div class="emotions-popover" id="emotionsPopover">
             <button class="emo-btn selected" onclick="selectEmotion('normal', this)">Normal</button>
             <button class="emo-btn" onclick="selectEmotion('happy', this)">Happy</button>
@@ -385,20 +433,17 @@
         const emotionsPopover = document.getElementById('emotionsPopover');
         const emoToggleBtn = document.getElementById('emoToggleBtn');
 
-        // Bật / Tắt bảng chọn cảm xúc khi bấm nút 😀
         function toggleEmotionsPopover() {
             emotionsPopover.classList.toggle('active');
             emoToggleBtn.classList.toggle('active');
         }
 
-        // Đổi cảm xúc khi bấm nút trong bảng
         function selectEmotion(emo, btnElement) {
             botCard.setAttribute('data-emotion', emo);
             document.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('selected'));
             if(btnElement) btnElement.classList.add('selected');
         }
 
-        // Kiểm soát ẩn/hiện nút gửi dựa theo độ dài chữ trong ô input
         function handleInputChange() {
             if (userInput.value.trim().length > 0) {
                 sendBtn.classList.add('show');
@@ -413,8 +458,6 @@
 
             userInput.value = '';
             sendBtn.classList.remove('show');
-
-            // Ẩn bảng emotions nếu đang mở
             emotionsPopover.classList.remove('active');
             emoToggleBtn.classList.remove('active');
 
@@ -460,7 +503,7 @@
                     const parsedData = JSON.parse(aiText);
 
                     selectEmotion(parsedData.emotion || 'normal');
-                    await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
+                    await animateTypewriterAndMouth(botBadge, parsedData.reply_text);
                 } else {
                     throw new Error("Invalid Response");
                 }
@@ -493,4 +536,4 @@
     </script>
 </body>
     </html>
-    
+                                                                                            

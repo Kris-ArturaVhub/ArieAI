@@ -2,7 +2,6 @@
   "name": "arie-ai-bot",
   "version": "1.0.0",
   "dependencies": {
-    "@google/genai": "latest"
+    "@google/generative-ai": "^0.22.0"
   }
 }
-

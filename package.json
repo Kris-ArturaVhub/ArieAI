@@ -2,7 +2,7 @@
   "name": "arie-ai-bot",
   "version": "1.0.0",
   "dependencies": {
-    "@google/genai": "lasted"
+    "@google/genai": "latest"
   }
 }
 

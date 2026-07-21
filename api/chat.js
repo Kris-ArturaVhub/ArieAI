@@ -11,10 +11,10 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'API Key not configured on Vercel' });
+      return res.status(500).json({ error: 'API Key chưa được cấu hình trên Vercel!' });
     }
 
-    // Gọi trực tiếp đến Gemini API endpoint chính thức bằng fetch (Không cần cài thư viện)
+    // Sử dụng model gemini-1.5-flash chuẩn
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const apiResponse = await fetch(geminiUrl, {
@@ -23,9 +23,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Bạn là Arie chatbot mini. Phản hồi ngắn gọn: "${prompt}".
-            BẮT BUỘC trả về định dạng JSON thuần không codeblock:
-            {"reply_text": "câu trả lời", "emotion": "chọn 1 trong [normal, happy, sad, angry, surprised, sleepy]"}`
+            text: `Bạn là Arie chatbot mini. Hãy trả lời câu hỏi sau bằng Tiếng Việt.
+            BẮT BUỘC trả về định dạng JSON thuần không có Markdown codeblock, dạng:
+            {"reply_text": "câu trả lời của bạn", "emotion": "normal"}
+            
+            Câu hỏi: "${prompt}"`
           }]
         }]
       })
@@ -33,16 +35,26 @@ export default async function handler(req, res) {
 
     const data = await apiResponse.json();
 
-    if (data.candidates && data.candidates[0].content.parts[0].text) {
-      const responseText = data.candidates[0].content.parts[0].text;
-      return res.status(200).json({ text: responseText });
+    // Nếu Google báo lỗi (ví dụ API Key hỏng/bị rò rỉ)
+    if (data.error) {
+      console.error('Google API Error:', data.error);
+      return res.status(500).json({ error: data.error.message || 'Lỗi từ phía Gemini API' });
+    }
+
+    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+      let rawText = data.candidates[0].content.parts[0].text;
+      
+      // Xóa bỏ các ký tự codeblock ```json nếu Gemini lỡ tự thêm vào
+      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      return res.status(200).json({ text: rawText });
     } else {
-      throw new Error("Invalid response from Gemini API");
+      console.error('Unexpected Gemini Response Structure:', JSON.stringify(data));
+      return res.status(500).json({ error: 'Phản hồi từ Gemini không đúng cấu trúc' });
     }
 
   } catch (error) {
     console.error('Error in API route:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
-                                    }
-                      
+  }

@@ -454,70 +454,61 @@
         }
 
         async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
+    const text = userInput.value.trim();
+    if (!text) return;
 
-            userInput.value = '';
-            sendBtn.classList.remove('show');
-            emotionsPopover.classList.remove('active');
-            emoToggleBtn.classList.remove('active');
+    userInput.value = '';
+    sendBtn.classList.remove('show');
+    emotionsPopover.classList.remove('active');
+    emoToggleBtn.classList.remove('active');
 
-            const userBubble = document.createElement('div');
-            userBubble.className = 'msg-bubble msg-user';
-            userBubble.innerText = text;
-            chatHistory.appendChild(userBubble);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+    // Thêm tin nhắn của User vào giao diện...
+    const userBubble = document.createElement('div');
+    userBubble.className = 'msg-bubble msg-user';
+    userBubble.innerText = text;
+    chatHistory.appendChild(userBubble);
 
-            const botBubble = document.createElement('div');
-            botBubble.className = 'msg-bubble msg-bot';
-            botBubble.innerText = '...';
-            chatHistory.appendChild(botBubble);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+    const botBubble = document.createElement('div');
+    botBubble.className = 'msg-bubble msg-bot';
+    botBubble.innerText = '...';
+    chatHistory.appendChild(botBubble);
 
-            statusBadge.innerText = "Thinking...";
-            statusBadge.style.color = "#fdcb6e";
+    statusBadge.innerText = "Thinking...";
+    statusBadge.style.color = "#fdcb6e";
 
-            try {
-                const promptPayload = {
-                    contents: [{
-                        parts: [{
-                            text: `Bạn là Arie AI. Phản hồi ngắn gọn: "${text}".
-                            BẮT BUỘC trả về định dạng JSON thuần không codeblock:
-                            {"reply_text": "câu trả lời", "emotion": "chọn 1 trong [normal, happy, sad, angry, surprised, sleepy]"}`
-                        }]
-                    }]
-                };
+    try {
+        // GỌI ĐẾN BACKEND TRUNG GIAN (Không chứa API Key)
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: text })
+        });
 
-                const response = await fetch(GEMINI_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(promptPayload)
-                });
+        const data = await response.json();
+        statusBadge.innerText = "AI Core Active";
+        statusBadge.style.color = "#00ff88";
 
-                const rawData = await response.json();
-                statusBadge.innerText = "AI Core Active";
-                statusBadge.style.color = "#00ff88";
+        if (data.text) {
+            let aiText = data.text.trim().replace(/```json/g, '').replace(/```/g, '').trim();
+            const parsedData = JSON.parse(aiText);
 
-                if (rawData.candidates && rawData.candidates[0].content.parts[0].text) {
-                    let aiText = rawData.candidates[0].content.parts[0].text.trim();
-                    aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const parsedData = JSON.parse(aiText);
-
-                    selectEmotion(parsedData.emotion || 'normal');
-                    await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
-                } else {
-                    throw new Error("Invalid Response");
-                }
-
-            } catch (error) {
-                console.error(error);
-                statusBadge.innerText = "Error";
-                statusBadge.style.color = "#ff3838";
-                selectEmotion('sad');
-                botBubble.innerText = "⚠️ Lỗi kết nối API! Vui lòng kiểm tra lại Key.";
-            }
+            selectEmotion(parsedData.emotion || 'normal');
+            await animateTypewriterAndMouth(botBubble, parsedData.reply_text);
+        } else {
+            throw new Error("Invalid response format");
         }
 
+    } catch (error) {
+        console.error(error);
+        statusBadge.innerText = "Error";
+        statusBadge.style.color = "#ff3838";
+        selectEmotion('sad');
+        botBubble.innerText = "⚠️ Lỗi xử lý từ máy chủ!";
+    }
+        }
+        
+
+            
         async function animateTypewriterAndMouth(element, fullText) {
             botCard.classList.add('talking');
             element.innerText = "";

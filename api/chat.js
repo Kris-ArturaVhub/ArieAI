@@ -11,11 +11,11 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'API Key chưa được cài đặt trên Vercel!' });
+      return res.status(500).json({ error: 'API Key chưa được cài đặt!' });
     }
 
-    // Endpoint REST API của Gemini 1.5 Flash
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Đã đổi sang gemini-2.0-flash
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
     const apiResponse = await fetch(geminiUrl, {
       method: 'POST',
@@ -23,13 +23,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Bạn là Arie, chatbot mini. Hãy trả lời câu hỏi sau bằng Tiếng Việt.
-            BẮT BUỘC trả về định dạng JSON thuần đúng cấu trúc sau, không kèm bất kỳ văn bản giải thích nào khác:
-            {"reply_text": "nội dung câu trả lời", "emotion": "normal"}
-
-            Các emotion hợp lệ gồm: normal, happy, sleepy, angry, sad, surprised.
+            text: `Bạn là Arie,mini chatbot. Trả lời câu hỏi sau bằng Tiếng Việt.
+            BẮT BUỘC trả về câu trả lời bắt đầu bằng thẻ cảm xúc trong ngoặc vuông, sau đó là khoảng trắng và câu trả lời. KHÔNG TRẢ VỀ JSON!
             
-            Câu hỏi của người dùng: "${prompt}"`
+            Các thẻ hợp lệ: [normal], [happy], [sleepy], [angry], [sad], [surprised].
+            
+            Ví dụ:
+            [happy] Chào bạn, tôi có thể giúp gì?
+            
+            Câu hỏi: "${prompt}"`
           }]
         }]
       })
@@ -38,23 +40,17 @@ export default async function handler(req, res) {
     const data = await apiResponse.json();
 
     if (data.error) {
-      console.error('Google API Error:', data.error);
-      return res.status(500).json({ error: data.error.message || 'Lỗi từ phía Gemini API' });
+      return res.status(500).json({ error: data.error.message });
     }
 
     if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-      let rawText = data.candidates[0].content.parts[0].text;
-      
-      // Xóa sạch các dấu ```json hoặc ``` ở đầu/cuối chuỗi
-      rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-
+      let rawText = data.candidates[0].content.parts[0].text.trim();
       return res.status(200).json({ text: rawText });
     } else {
-      return res.status(500).json({ error: 'Không nhận được phản hồi đúng từ Gemini' });
+      return res.status(500).json({ error: 'Không nhận được phản hồi từ Gemini' });
     }
 
   } catch (error) {
-    console.error('Error in API route:', error);
-    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
-  }
+    }
